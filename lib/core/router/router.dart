@@ -9,6 +9,8 @@ import '../../features/chat/presentation/chat_list_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/feed/presentation/create_post_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/profile/data/profile_repository.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/report/presentation/report_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
@@ -31,10 +33,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const SignInScreen()),
       GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+      GoRoute(path: '/report', builder: (context, state) => const ReportScreen()),
 
+      // Edit Profile Route
       GoRoute(
-        path: '/report',
-        builder: (context, state) => const ReportScreen(),
+        path: '/edit-profile',
+        builder: (context, state) {
+          final user = state.extra as UserProfile;
+          return EditProfileScreen(user: user);
+        },
       ),
 
       GoRoute(

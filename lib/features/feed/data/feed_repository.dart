@@ -4,8 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../profile/data/profile_repository.dart';
 
-// --- PROVIDERS ---
-
 final feedRepositoryProvider = Provider((ref) {
   return FeedRepository(Supabase.instance.client);
 });
@@ -40,7 +38,6 @@ class PostModel {
   });
 
   factory PostModel.fromMap(Map<String, dynamic> map, String currentUserId) {
-    // Supabase returns joined tables as lists of objects
     final likesList = (map['post_likes'] as List?) ?? [];
     final commentsList = (map['post_comments'] as List?) ?? [];
 
@@ -49,10 +46,8 @@ class PostModel {
       content: map['content'],
       imageUrl: map['image_url'],
       createdAt: DateTime.parse(map['created_at']),
-      // The 'profiles' key contains the author data due to the join
+      // The alias 'profiles' ensures this key still works
       author: UserProfile.fromMap(map['profiles']),
-
-      // Calculate stats based on the returned lists
       likeCount: likesList.length,
       isLikedByMe: likesList.any((like) => like['user_id'] == currentUserId),
       commentCount: commentsList.length,
@@ -90,16 +85,19 @@ class FeedRepository {
 
   FeedRepository(this._supabase);
 
-  /// 1. Fetch Posts with Join (Author, Likes, Comments)
   Future<List<PostModel>> fetchPosts() async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
+    // FIX APPLIED HERE:
+    // We use 'profiles:profiles!posts_author_id_fkey(*)'
+    // 1. 'profiles:' -> This tells Supabase to name the JSON key "profiles" (so our Model works)
+    // 2. '!posts_author_id_fkey' -> This tells Supabase to specifically use the Author relationship, not the Likes relationship.
     final data = await _supabase
         .from('posts')
         .select('''
           *,
-          profiles(*),
+          profiles:profiles!posts_author_id_fkey(*),
           post_likes(user_id),
           post_comments(id)
         ''')
@@ -108,18 +106,14 @@ class FeedRepository {
     return (data as List).map((e) => PostModel.fromMap(e, userId)).toList();
   }
 
-  /// 2. Like or Unlike a Post
   Future<void> toggleLike(String postId, bool isCurrentlyLiked) async {
     final userId = _supabase.auth.currentUser!.id;
-
     if (isCurrentlyLiked) {
-      // Unlike: Remove the row
       await _supabase.from('post_likes').delete().match({
         'post_id': postId,
         'user_id': userId,
       });
     } else {
-      // Like: Add a row
       await _supabase.from('post_likes').insert({
         'post_id': postId,
         'user_id': userId,
@@ -127,21 +121,18 @@ class FeedRepository {
     }
   }
 
-  /// 3. Fetch Comments for a specific Post
   Future<List<CommentModel>> getComments(String postId) async {
     final data = await _supabase
         .from('post_comments')
-        .select('*, profiles(*)') // Join with profiles to get author name/avatar
+        .select('*, profiles(*)')
         .eq('post_id', postId)
         .order('created_at', ascending: true);
 
     return (data as List).map((e) => CommentModel.fromMap(e)).toList();
   }
 
-  /// 4. Add a new Comment
   Future<void> addComment(String postId, String text) async {
     final userId = _supabase.auth.currentUser!.id;
-
     await _supabase.from('post_comments').insert({
       'post_id': postId,
       'author_id': userId,
@@ -149,41 +140,40 @@ class FeedRepository {
     });
   }
 
-  /// 5. Upload Image to Storage
   Future<String> uploadPostImage(File imageFile) async {
     try {
       final userId = _supabase.auth.currentUser!.id;
-      // Create unique filename: userID_timestamp.jpg
       final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
       await _supabase.storage.from('post_images').upload(
         fileName,
         imageFile,
         fileOptions: const FileOptions(upsert: true),
       );
-
-      // Get public URL
-      final imageUrl = _supabase.storage.from('post_images').getPublicUrl(fileName);
-      return imageUrl;
+      return _supabase.storage.from('post_images').getPublicUrl(fileName);
     } catch (e) {
       throw Exception('Image upload failed: $e');
     }
   }
 
-  /// 6. Create a New Post
   Future<void> createPost(String content, File? imageFile) async {
     final userId = _supabase.auth.currentUser!.id;
     String? imageUrl;
 
-    // Upload image first if it exists
     if (imageFile != null) {
       imageUrl = await uploadPostImage(imageFile);
     }
 
-    // Insert post data
     await _supabase.from('posts').insert({
       'content': content,
       'image_url': imageUrl,
+      'author_id': userId,
+    });
+  }
+
+  Future<void> deletePost(String postId) async {
+    final userId = _supabase.auth.currentUser!.id;
+    await _supabase.from('posts').delete().match({
+      'id': postId,
       'author_id': userId,
     });
   }

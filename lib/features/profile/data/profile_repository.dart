@@ -52,6 +52,23 @@ class ProfileRepository {
     if (user == null) throw Exception("User not logged in");
     return getProfile(user.id);
   }
+
+  // --- NEW: Update Profile ---
+  Future<void> updateProfile({
+    required String name,
+    required String surname,
+    String? bio,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    await _supabase.from('profiles').update({
+      'name': name,
+      'surname': surname,
+      'bio': bio,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', user.id);
+  }
 }
 
 // Provider to get the current user's profile data easily in the UI

@@ -54,26 +54,40 @@ class ProfileScreen extends ConsumerWidget {
                             : null,
                       ),
                       const SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            profile.name,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    "${profile.name} ${profile.surname}",
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                                  onPressed: () {
+                                    // Navigate to Edit Profile, passing the current profile object
+                                    context.push('/edit-profile', extra: profile);
+                                  },
+                                )
+                              ],
                             ),
-                          ),
-                          Text(
-                            profile.surname,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                            if (profile.bio != null && profile.bio!.isNotEmpty)
+                              Text(
+                                profile.bio!,
+                                style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -96,14 +110,11 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 30),
 
-                // Anti-Corruption Button (Linked to Report Screen)
+                // Anti-Corruption Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: GestureDetector(
-                    onTap: () {
-                      // Navigate to the Report Screen
-                      context.push('/report');
-                    },
+                    onTap: () => context.push('/report'),
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(

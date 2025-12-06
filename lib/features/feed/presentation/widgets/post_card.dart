@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/feed_repository.dart';
 import 'comments_sheet.dart';
 
-// Change to ConsumerWidget to access providers
 class PostCard extends ConsumerWidget {
   final PostModel post;
 
@@ -15,6 +15,8 @@ class PostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timeAgo = DateFormat.yMMMd().format(post.createdAt);
+    final myId = Supabase.instance.client.auth.currentUser?.id;
+    final isMyPost = myId == post.author.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -23,7 +25,7 @@ class PostCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header (Avatar + Name)
+          // Header (Avatar + Name + More Options)
           Row(
             children: [
               CircleAvatar(
@@ -37,19 +39,42 @@ class PostCard extends ConsumerWidget {
                     : null,
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "${post.author.name} ${post.author.surname}",
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Text(
-                    timeAgo,
-                    style: GoogleFonts.inter(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${post.author.name} ${post.author.surname}",
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    Text(
+                      timeAgo,
+                      style: GoogleFonts.inter(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
+              if (isMyPost)
+                PopupMenuButton(
+                  icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _confirmDelete(context, ref);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text("Delete", style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    )
+                  ],
+                )
             ],
           ),
 
@@ -72,9 +97,7 @@ class PostCard extends ConsumerWidget {
               // LIKE BUTTON
               InkWell(
                 onTap: () async {
-                  // 1. Call API
                   await ref.read(feedRepositoryProvider).toggleLike(post.id, post.isLikedByMe);
-                  // 2. Refresh List to show updated count/color
                   ref.invalidate(postsProvider);
                 },
                 child: Row(
@@ -97,7 +120,7 @@ class PostCard extends ConsumerWidget {
                 onTap: () {
                   showModalBottomSheet(
                     context: context,
-                    isScrollControlled: true, // Allow full height
+                    isScrollControlled: true,
                     builder: (context) => CommentsSheet(postId: post.id),
                   );
                 },
@@ -111,6 +134,27 @@ class PostCard extends ConsumerWidget {
               ),
             ],
           )
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Post?"),
+        content: const Text("This action cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx); // Close dialog
+              await ref.read(feedRepositoryProvider).deletePost(post.id);
+              ref.invalidate(postsProvider); // Refresh feed
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
