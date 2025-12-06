@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/presentation/widgets/smart_avatar.dart';
 import '../data/profile_repository.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -14,14 +15,11 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(myProfileProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF002F87), // Brand Blue
+      backgroundColor: const Color(0xFF002F87),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-            "Profil sozlamalari",
-            style: TextStyle(color: Colors.white, fontSize: 16)
-        ),
+        title: const Text("Profil sozlamalari", style: TextStyle(color: Colors.white, fontSize: 16)),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
@@ -37,21 +35,16 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // Avatar & Info Row
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      // --- SMART AVATAR USED HERE ---
+                      SmartAvatar(
+                        imageUrl: profile.avatarUrl,
+                        name: profile.name,
+                        surname: profile.surname,
                         radius: 40,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: profile.avatarUrl != null
-                            ? NetworkImage(profile.avatarUrl!)
-                            : null,
-                        child: profile.avatarUrl == null
-                            ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                            : null,
                       ),
                       const SizedBox(width: 20),
                       Expanded(
@@ -63,19 +56,12 @@ class ProfileScreen extends ConsumerWidget {
                                 Flexible(
                                   child: Text(
                                     "${profile.name} ${profile.surname}",
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
-                                  onPressed: () {
-                                    // Navigate to Edit Profile, passing the current profile object
-                                    context.push('/edit-profile', extra: profile);
-                                  },
+                                  onPressed: () => context.push('/edit-profile', extra: profile),
                                 )
                               ],
                             ),
@@ -95,7 +81,6 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 30),
 
-                // Stats Row
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Row(
@@ -110,7 +95,6 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 30),
 
-                // Anti-Corruption Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: GestureDetector(
@@ -118,7 +102,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD32F2F), // Red
+                        color: const Color(0xFFD32F2F),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -130,10 +114,7 @@ class ProfileScreen extends ConsumerWidget {
                           Flexible(
                             child: Text(
                               "Korrupsiyaga qarshi fikr bildirish",
-                              style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600
-                              ),
+                              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -145,16 +126,12 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 40),
 
-                // Logo at bottom
                 const Icon(Icons.shield, size: 80, color: Colors.white),
                 const SizedBox(height: 10),
                 Text(
                   "Toshkent to'qimachilik\nva yengil sanoat\ninstituti",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -170,20 +147,14 @@ class ProfileScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
-            Text(
-              count,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+            Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
+            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ],
         ),
       ),

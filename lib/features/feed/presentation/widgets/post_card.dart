@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/presentation/widgets/smart_avatar.dart';
+import '../../../../core/presentation/widgets/smart_image.dart';
 import '../../data/feed_repository.dart';
 import 'comments_sheet.dart';
 
@@ -25,18 +27,15 @@ class PostCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header (Avatar + Name + More Options)
+          // Header
           Row(
             children: [
-              CircleAvatar(
+              // --- SMART AVATAR USED HERE ---
+              SmartAvatar(
+                imageUrl: post.author.avatarUrl,
+                name: post.author.name,
+                surname: post.author.surname,
                 radius: 20,
-                backgroundColor: Colors.grey[200],
-                backgroundImage: post.author.avatarUrl != null
-                    ? NetworkImage(post.author.avatarUrl!)
-                    : null,
-                child: post.author.avatarUrl == null
-                    ? const Icon(Icons.person, color: Colors.grey)
-                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -58,9 +57,7 @@ class PostCard extends ConsumerWidget {
                 PopupMenuButton(
                   icon: const Icon(Icons.more_horiz, color: Colors.grey),
                   onSelected: (value) {
-                    if (value == 'delete') {
-                      _confirmDelete(context, ref);
-                    }
+                    if (value == 'delete') _confirmDelete(context, ref);
                   },
                   itemBuilder: (context) => [
                     const PopupMenuItem(
@@ -87,14 +84,18 @@ class PostCard extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 12.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(post.imageUrl!, width: double.infinity, fit: BoxFit.cover),
+                // --- SMART IMAGE USED HERE ---
+                child: SmartImage(
+                  post.imageUrl!,
+                  width: double.infinity,
+                  height: 250, // Fixed height or remove for dynamic
+                ),
               ),
             ),
 
-          // --- ACTION BUTTONS ---
+          // Action Buttons
           Row(
             children: [
-              // LIKE BUTTON
               InkWell(
                 onTap: () async {
                   await ref.read(feedRepositoryProvider).toggleLike(post.id, post.isLikedByMe);
@@ -112,10 +113,7 @@ class PostCard extends ConsumerWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 20),
-
-              // COMMENT BUTTON
               InkWell(
                 onTap: () {
                   showModalBottomSheet(
@@ -149,9 +147,9 @@ class PostCard extends ConsumerWidget {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
-              Navigator.pop(ctx); // Close dialog
+              Navigator.pop(ctx);
               await ref.read(feedRepositoryProvider).deletePost(post.id);
-              ref.invalidate(postsProvider); // Refresh feed
+              ref.invalidate(postsProvider);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
