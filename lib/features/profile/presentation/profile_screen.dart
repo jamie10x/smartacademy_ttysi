@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,7 +18,10 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Profil sozlamalari", style: TextStyle(color: Colors.white, fontSize: 16)),
+        title: const Text(
+            "Profil sozlamalari",
+            style: TextStyle(color: Colors.white, fontSize: 16)
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
@@ -33,6 +37,7 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
+
                 // Avatar & Info Row
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -91,32 +96,38 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 30),
 
-                // Anti-Corruption Button
+                // Anti-Corruption Button (Linked to Report Screen)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD32F2F), // Red
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.campaign, color: Colors.white),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            "Korrupsiyaga qarshi fikr bildirish",
-                            style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600
+                  child: GestureDetector(
+                    onTap: () {
+                      // Navigate to the Report Screen
+                      context.push('/report');
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD32F2F), // Red
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.campaign, color: Colors.white),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              "Korrupsiyaga qarshi fikr bildirish",
+                              style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

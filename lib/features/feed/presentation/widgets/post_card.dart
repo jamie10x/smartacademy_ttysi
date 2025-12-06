@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add Riverpod
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/feed_repository.dart';
+import 'comments_sheet.dart';
 
-class PostCard extends StatelessWidget {
+// Change to ConsumerWidget to access providers
+class PostCard extends ConsumerWidget {
   final PostModel post;
 
   const PostCard({super.key, required this.post});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final timeAgo = DateFormat.yMMMd().format(post.createdAt);
 
     return Container(
@@ -20,7 +23,7 @@ class PostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Avatar + Name + Time
+          // Header (Avatar + Name)
           Row(
             children: [
               CircleAvatar(
@@ -39,61 +42,73 @@ class PostCard extends StatelessWidget {
                 children: [
                   Text(
                     "${post.author.name} ${post.author.surname}",
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   Text(
                     timeAgo,
-                    style: GoogleFonts.inter(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
+                    style: GoogleFonts.inter(color: Colors.grey, fontSize: 12),
                   ),
                 ],
               ),
-              const Spacer(),
-              const Icon(Icons.more_horiz, color: Colors.grey),
             ],
           ),
 
           const SizedBox(height: 12),
-
-          // Content Text
-          Text(
-            post.content,
-            style: GoogleFonts.inter(fontSize: 14, height: 1.4),
-          ),
-
+          Text(post.content, style: GoogleFonts.inter(fontSize: 14, height: 1.4)),
           const SizedBox(height: 12),
 
-          // Optional Image
           if (post.imageUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                post.imageUrl!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, _, __) => const SizedBox(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(post.imageUrl!, width: double.infinity, fit: BoxFit.cover),
               ),
             ),
 
-          if (post.imageUrl != null) const SizedBox(height: 12),
-
-          // Action Buttons (Mocked for now)
+          // --- ACTION BUTTONS ---
           Row(
             children: [
-              const Icon(Icons.favorite_border, size: 20),
-              const SizedBox(width: 6),
-              const Text("12 likes", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              // LIKE BUTTON
+              InkWell(
+                onTap: () async {
+                  // 1. Call API
+                  await ref.read(feedRepositoryProvider).toggleLike(post.id, post.isLikedByMe);
+                  // 2. Refresh List to show updated count/color
+                  ref.invalidate(postsProvider);
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      post.isLikedByMe ? Icons.favorite : Icons.favorite_border,
+                      color: post.isLikedByMe ? Colors.red : Colors.black87,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 6),
+                    Text("${post.likeCount} likes", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
 
               const SizedBox(width: 20),
 
-              const Icon(Icons.chat_bubble_outline, size: 20),
-              const SizedBox(width: 6),
-              const Text("4 comments", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              // COMMENT BUTTON
+              InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true, // Allow full height
+                    builder: (context) => CommentsSheet(postId: post.id),
+                  );
+                },
+                child: Row(
+                  children: [
+                    const Icon(Icons.chat_bubble_outline, size: 22),
+                    const SizedBox(width: 6),
+                    Text("${post.commentCount} comments", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
             ],
           )
         ],

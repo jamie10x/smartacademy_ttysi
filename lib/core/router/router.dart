@@ -5,17 +5,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/chat/presentation/chat_list_screen.dart';
+import '../../features/chat/presentation/chat_screen.dart';
+import '../../features/feed/presentation/create_post_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/report/presentation/report_screen.dart';
+import '../../features/search/presentation/search_screen.dart';
 import '../presentation/main_scaffold.dart';
-
-// Create simple placeholders for other tabs so app doesn't crash
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen(this.title, {super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(title)));
-}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authStream = Supabase.instance.client.auth.onAuthStateChange;
@@ -35,40 +32,45 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const SignInScreen()),
       GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
 
-      // THE SHELL ROUTE (Tab Bar)
+      GoRoute(
+        path: '/report',
+        builder: (context, state) => const ReportScreen(),
+      ),
+
+      GoRoute(
+        path: '/chat/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final userName = state.extra as String? ?? "Chat";
+          return ChatScreen(chatId: id, otherUserName: userName);
+        },
+      ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainScaffold(navigationShell: navigationShell);
         },
         branches: [
-          // Tab 1: Home
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                  path: '/home',
-                  builder: (context, state) => const FeedScreen()
-              ),
+              GoRoute(path: '/home', builder: (context, state) => const FeedScreen()),
             ],
           ),
-          // Tab 2: Search
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/search', builder: (context, state) => const PlaceholderScreen("Search")),
+              GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
             ],
           ),
-          // Tab 3: Create
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/create', builder: (context, state) => const PlaceholderScreen("Create Post")),
+              GoRoute(path: '/create', builder: (context, state) => const CreatePostScreen()),
             ],
           ),
-          // Tab 4: Activity
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/activity', builder: (context, state) => const PlaceholderScreen("Activity")),
+              GoRoute(path: '/activity', builder: (context, state) => const ChatListScreen()),
             ],
           ),
-          // Tab 5: Profile
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
