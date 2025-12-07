@@ -43,8 +43,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         _contentController.clear();
         setState(() => _selectedImage = null);
 
-        // Refresh the Feed
-        ref.invalidate(postsProvider);
+        ref.invalidate(postsProvider(FeedFilter.all));
+        ref.invalidate(postsProvider(FeedFilter.mine));
 
         // Go back to Home tab
         context.go('/home');
