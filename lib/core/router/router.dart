@@ -11,6 +11,7 @@ import '../../features/feed/presentation/create_post_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/follow_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/report/presentation/report_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
@@ -50,6 +51,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           final userName = state.extra as String? ?? "Chat";
           return ChatScreen(chatId: id, otherUserName: userName);
+        },
+      ),
+
+      GoRoute(
+        path: '/follow-list/:type', // type = followers OR following
+        builder: (context, state) {
+          final type = state.pathParameters['type']!;
+          return FollowListScreen(type: type);
         },
       ),
 

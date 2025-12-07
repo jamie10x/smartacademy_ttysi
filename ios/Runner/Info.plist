@@ -49,5 +49,17 @@
     <string>We need access to your gallery to upload post images.</string>
     <key>NSCameraUsageDescription</key>
     <string>We need access to your camera to take photos for posts.</string>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>io.supabase.flutter</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

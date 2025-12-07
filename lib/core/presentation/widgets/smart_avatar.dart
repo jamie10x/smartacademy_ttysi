@@ -45,7 +45,7 @@ class SmartAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: radius,
-      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
       child: Text(
         initials.toUpperCase(),
         style: TextStyle(

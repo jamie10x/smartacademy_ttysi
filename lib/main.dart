@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Make sure this is imported!
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/constants/supabase_constants.dart';
 import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
+
+final class LoggerObserver extends ProviderObserver {
+}
+@override
+void didUpdateProvider(
+    ProviderObserverContext context,
+    Object? previousValue,
+    Object? newValue,
+    ) {
+  debugPrint('''
+[Riverpod] State Changed:
+  Provider: ${context.provider.name ?? context.provider.runtimeType}
+  New Value: $newValue
+''');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +29,12 @@ void main() async {
     anonKey: SupabaseConstants.anonKey,
   );
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ProviderScope(
+      observers: [LoggerObserver()], // Add the observer here
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {

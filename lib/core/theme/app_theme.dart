@@ -12,7 +12,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
-        background: scaffoldBackground,
+        surface: scaffoldBackground,
         primary: primaryColor,
         secondary: accentColor,
       ),

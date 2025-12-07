@@ -67,7 +67,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
               _buildTextField(_nameController, "Ismingiz"),
               const SizedBox(height: 12),
-              _buildTextField(_surnameController, "Familiyangiz"), // Important for Profile
+              _buildTextField(_surnameController, "Familiyangiz"),
               const SizedBox(height: 12),
               _buildTextField(_emailController, "Email"),
               const SizedBox(height: 12),

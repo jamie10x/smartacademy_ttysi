@@ -13,6 +13,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myProfileProvider);
+    final statsAsync = ref.watch(profileStatsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF002F87),
@@ -35,16 +36,20 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Row(
                     children: [
-                      // --- SMART AVATAR USED HERE ---
-                      SmartAvatar(
-                        imageUrl: profile.avatarUrl,
-                        name: profile.name,
-                        surname: profile.surname,
-                        radius: 40,
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: SmartAvatar(
+                          imageUrl: profile.avatarUrl,
+                          name: profile.name,
+                          surname: profile.surname,
+                          radius: 40,
+                        ),
                       ),
                       const SizedBox(width: 20),
                       Expanded(
@@ -56,7 +61,11 @@ class ProfileScreen extends ConsumerWidget {
                                 Flexible(
                                   child: Text(
                                     "${profile.name} ${profile.surname}",
-                                    style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 IconButton(
@@ -65,13 +74,8 @@ class ProfileScreen extends ConsumerWidget {
                                 )
                               ],
                             ),
-                            if (profile.bio != null && profile.bio!.isNotEmpty)
-                              Text(
-                                profile.bio!,
-                                style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            if (profile.bio != null)
+                              Text(profile.bio!, style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
                           ],
                         ),
                       )
@@ -83,13 +87,25 @@ class ProfileScreen extends ConsumerWidget {
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildStatBox("25", "Kuzatayotganlar"),
-                      const SizedBox(width: 10),
-                      _buildStatBox("19", "Kuzatish"),
-                    ],
+                  child: statsAsync.when(
+                    loading: () => const Center(child: LinearProgressIndicator(color: Colors.white24)),
+                    error: (e, _) => const Text("Error loading stats", style: TextStyle(color: Colors.white)),
+                    data: (stats) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildStatBox(
+                          count: stats.followers.toString(),
+                          label: "Kuzatayotganlar",
+                          onTap: () => context.push('/follow-list/followers'),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildStatBox(
+                          count: stats.following.toString(),
+                          label: "Kuzatish",
+                          onTap: () => context.push('/follow-list/following'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -101,10 +117,7 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push('/report'),
                     child: Container(
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD32F2F),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: BoxDecoration(color: const Color(0xFFD32F2F), borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -125,14 +138,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
 
                 const SizedBox(height: 40),
-
                 const Icon(Icons.shield, size: 80, color: Colors.white),
-                const SizedBox(height: 10),
-                Text(
-                  "Toshkent to'qimachilik\nva yengil sanoat\ninstituti",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
-                ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -142,20 +148,23 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatBox(String count, String label) {
+  Widget _buildStatBox({required String count, required String label, required VoidCallback onTap}) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 4),
+              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          ),
         ),
       ),
     );
