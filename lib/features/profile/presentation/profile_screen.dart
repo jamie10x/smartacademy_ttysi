@@ -10,6 +10,9 @@ import '../data/profile_repository.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  // Flip to `true` when the report feature is ready.
+  static const bool _enableReportFeature = false;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myProfileProvider);
@@ -111,32 +114,37 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 30),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: GestureDetector(
-                    onTap: () => context.push('/report'),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(color: const Color(0xFFD32F2F), borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.campaign, color: Colors.white),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              "Korrupsiyaga qarshi fikr bildirish",
-                              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+                if (_enableReportFeature)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        // TODO: Re-enable in next versions
+                        // context.push('/report');
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(color: const Color(0xFFD32F2F), borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.campaign, color: Colors.white),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                "Korrupsiyaga qarshi fikr bildirish",
+                                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
+                // Keep spacing consistent when hidden
                 const SizedBox(height: 40),
                 const Icon(Icons.shield, size: 80, color: Colors.white),
                 const SizedBox(height: 20),
@@ -170,3 +178,4 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+
