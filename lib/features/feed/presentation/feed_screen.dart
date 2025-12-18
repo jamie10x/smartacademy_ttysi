@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartacademy_ttysi/features/feed/presentation/widgets/post_card.dart';
 
@@ -34,8 +35,10 @@ class FeedScreen extends ConsumerWidget {
           ),
           actions: [
             IconButton(
-                onPressed: (){},
-                icon: const Icon(Icons.notifications_none, color: Colors.black87)
+              onPressed: () {
+                context.push('/chat-list');
+              },
+              icon: const Icon(Icons.message_outlined, color: Colors.black87),
             ),
           ],
         ),

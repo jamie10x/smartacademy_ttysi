@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/chat/presentation/chat_list_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/feed/presentation/create_post_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
@@ -35,6 +36,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const SignInScreen()),
       GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
       GoRoute(path: '/report', builder: (context, state) => const ReportScreen()),
+      GoRoute(
+        path: '/chat-list',
+        builder: (context, state) => const ChatListScreen(),
+      ),
 
       // Edit Profile Route
       GoRoute(
@@ -84,7 +89,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/activity', builder: (context, state) => const ActivityScreen()),
+              GoRoute(
+                  path: '/activity',
+                  builder: (context, state) => const ActivityScreen()
+              ),
             ],
           ),
           StatefulShellBranch(
