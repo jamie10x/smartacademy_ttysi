@@ -7,18 +7,18 @@ import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
 
 final class LoggerObserver extends ProviderObserver {
-}
-@override
-void didUpdateProvider(
+  @override
+  void didUpdateProvider(
     ProviderObserverContext context,
     Object? previousValue,
     Object? newValue,
-    ) {
-  debugPrint('''
+  ) {
+    debugPrint('''
 [Riverpod] State Changed:
   Provider: ${context.provider.name ?? context.provider.runtimeType}
   New Value: $newValue
 ''');
+  }
 }
 
 void main() async {
@@ -31,7 +31,7 @@ void main() async {
 
   runApp(
     ProviderScope(
-      observers: [LoggerObserver()], // Add the observer here
+      observers: [LoggerObserver()],
       child: const MyApp(),
     ),
   );
