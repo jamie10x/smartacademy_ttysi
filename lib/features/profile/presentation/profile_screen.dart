@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/presentation/widgets/smart_avatar.dart';
+import '../../feed/data/feed_repository.dart';
+import '../../feed/presentation/widgets/post_card.dart';
 import '../data/profile_repository.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -13,211 +15,255 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myProfileProvider);
     final statsAsync = ref.watch(profileStatsProvider);
+    final myPostsAsync = ref.watch(postsProvider(FeedFilter.mine));
 
     return Scaffold(
-      // Gradient Background
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF002F87), // University Blue
-              Color(0xFF001A4D), // Darker shade
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: profileAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-            error: (err, stack) => Center(
-              child: Text(
-                'Error: $err',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            data: (profile) {
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      // Header with Settings
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.settings,
-                            color: Colors.white70,
-                          ),
-                          onPressed: () => context.push('/settings'),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // Glassmorph Card for Profile Info
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+      backgroundColor: Colors.white, // White background as requested
+      body: SafeArea(
+        child: profileAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (profile) {
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // 1. Header & Profile Card
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      children: [
+                        // Settings Button Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Profil",
+                              style: GoogleFonts.outfit(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.settings,
+                                color: Colors.black54,
+                              ),
+                              onPressed: () => context.push('/settings'),
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            // Avatar with Glow
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  width: 2,
+
+                        const SizedBox(height: 20),
+
+                        // Premium Identity Card
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF002F87), Color(0xFF001A4D)],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF002F87,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // Avatar
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white30,
+                                    width: 2,
+                                  ),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blueAccent.withValues(
-                                      alpha: 0.3,
+                                child: SmartAvatar(
+                                  imageUrl: profile.avatarUrl,
+                                  name: profile.name,
+                                  surname: profile.surname,
+                                  radius: 45,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Name
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "${profile.name} ${profile.surname}",
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () => context.push(
+                                      '/edit-profile',
+                                      extra: profile,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white12,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.edit,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: SmartAvatar(
-                                imageUrl: profile.avatarUrl,
-                                name: profile.name,
-                                surname: profile.surname,
-                                radius: 50,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
 
-                            // Name & Edit Icon
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                              if (profile.bio != null) ...[
+                                const SizedBox(height: 8),
                                 Text(
-                                  "${profile.name} ${profile.surname}",
-                                  style: GoogleFonts.outfit(
-                                    // Using Outfit for modern look if available, mostly likely falls back or looks clean
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => context.push(
-                                    '/edit-profile',
-                                    extra: profile,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      size: 14,
-                                      color: Colors.blueAccent,
-                                    ),
+                                  profile.bio!,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white70,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
-                            ),
 
-                            const SizedBox(height: 8),
+                              const SizedBox(height: 24),
+                              Divider(color: Colors.white24),
+                              const SizedBox(height: 16),
 
-                            if (profile.bio != null)
-                              Text(
-                                profile.bio!,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white60,
-                                  fontSize: 14,
-                                  height: 1.5,
+                              // Stats
+                              statsAsync.when(
+                                loading: () => const SizedBox(),
+                                error: (e, _) => const SizedBox(),
+                                data: (stats) => Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildStatColumn(
+                                      count: stats.followers.toString(),
+                                      label: "Obunachilar",
+                                      onTap: () => context.push(
+                                        '/follow-list/followers',
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 30,
+                                      width: 1,
+                                      color: Colors.white24,
+                                    ),
+                                    _buildStatColumn(
+                                      count: stats.following.toString(),
+                                      label: "Obunalar",
+                                      onTap: () => context.push(
+                                        '/follow-list/following',
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-
-                            const SizedBox(height: 24),
-
-                            // Stats Row inside Card
-                            statsAsync.when(
-                              loading: () => const LinearProgressIndicator(
-                                color: Colors.white10,
-                              ),
-                              error: (e, _) => const SizedBox(),
-                              data: (stats) => Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _buildStatColumn(
-                                    count: stats.followers.toString(),
-                                    label: "Obunachilar",
-                                    onTap: () =>
-                                        context.push('/follow-list/followers'),
-                                  ),
-                                  Container(
-                                    height: 30,
-                                    width: 1,
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                  ),
-                                  _buildStatColumn(
-                                    count: stats.following.toString(),
-                                    label: "Obunalar",
-                                    onTap: () =>
-                                        context.push('/follow-list/following'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Decorative Element or Additional Info
-                      const Icon(
-                        Icons.shield_outlined,
-                        size: 40,
-                        color: Colors.white10,
-                      ),
-                      Text(
-                        "TTYSI Social",
-                        style: GoogleFonts.inter(
-                          color: Colors.white10,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 30)),
+
+                // 2. Recent Posts Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Text(
+                      "Mening Postlarim",
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // 3. Recent Posts List
+                myPostsAsync.when(
+                  loading: () => const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+                  error: (e, _) => SliverToBoxAdapter(
+                    child: Center(child: Text("Error: $e")),
+                  ),
+                  data: (posts) {
+                    if (posts.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.feed_outlined,
+                                size: 48,
+                                color: Colors.grey[300],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                "Hozircha postlar yo'q",
+                                style: GoogleFonts.inter(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final post = posts[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          // Reuse PostCard but with a slight elevation or border if needed
+                          // The PostCard itself has margin bottom, so we just wrap it.
+                          child: PostCard(post: post),
+                        );
+                      }, childCount: posts.length),
+                    );
+                  },
+                ),
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 80),
+                ), // Bottom padding
+              ],
+            );
+          },
         ),
       ),
     );
