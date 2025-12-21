@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -86,7 +87,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             children: [
               const SizedBox(height: 40),
               // Logo Placeholder
-              const Icon(Icons.shield, size: 80, color: Colors.white),
+              // Logo
+              Center(
+                child: Hero(
+                  tag: 'app_logo',
+                  child: SvgPicture.asset(
+                    'lib/assets/images/ttysi_logo.svg',
+                    height: 100,
+                    placeholderBuilder: (context) =>
+                        const SizedBox(height: 100, width: 100),
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 "Toshkent to'qimachilik\nva yengil sanoat\ninstituti",

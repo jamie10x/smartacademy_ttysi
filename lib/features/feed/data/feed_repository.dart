@@ -25,7 +25,7 @@ final postsProvider = FutureProvider.family<List<PostModel>, FeedFilter>((
 class PostModel {
   final String id;
   final String content;
-  final String? imageUrl;
+  final List<String> imageUrls; // Changed from String? imageUrl
   final DateTime createdAt;
   final UserProfile author;
   final int likeCount;
@@ -35,7 +35,7 @@ class PostModel {
   PostModel({
     required this.id,
     required this.content,
-    this.imageUrl,
+    required this.imageUrls,
     required this.createdAt,
     required this.author,
     required this.likeCount,
@@ -47,10 +47,18 @@ class PostModel {
     final likesList = (map['post_likes'] as List?) ?? [];
     final commentsList = (map['post_comments'] as List?) ?? [];
 
+    // Parse images: prefer 'image_urls', fallback to 'image_url'
+    List<String> parsedImages = [];
+    if (map['image_urls'] != null) {
+      parsedImages = List<String>.from(map['image_urls']);
+    } else if (map['image_url'] != null) {
+      parsedImages = [map['image_url']];
+    }
+
     return PostModel(
       id: map['id'],
       content: map['content'],
-      imageUrl: map['image_url'],
+      imageUrls: parsedImages,
       createdAt: DateTime.parse(map['created_at']),
       author: UserProfile.fromMap(map['profiles']),
       likeCount: likesList.length,
@@ -58,6 +66,9 @@ class PostModel {
       commentCount: commentsList.length,
     );
   }
+
+  // Helper to get main image for backward compatibility if needed
+  String? get firstImage => imageUrls.isNotEmpty ? imageUrls.first : null;
 }
 
 class CommentModel {
@@ -133,9 +144,6 @@ class FeedRepository {
     return (data as List).map((e) => PostModel.fromMap(e, userId)).toList();
   }
 
-  // ... (Rest of the methods: toggleLike, getComments, addComment, createPost, deletePost remain unchanged)
-  // Re-pasting them for completeness if you are copy-pasting the whole file:
-
   Future<void> toggleLike(String postId, bool isCurrentlyLiked) async {
     final userId = _supabase.auth.currentUser!.id;
     if (isCurrentlyLiked) {
@@ -169,40 +177,57 @@ class FeedRepository {
     });
   }
 
-  Future<String> uploadPostImage(File imageFile) async {
+  Future<List<String>> uploadPostImages(List<File> imageFiles) async {
     final userId = _supabase.auth.currentUser!.id;
-    final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await _supabase.storage
-        .from('post_images')
-        .upload(
-          fileName,
-          imageFile,
-          fileOptions: const FileOptions(upsert: true),
-        );
-    return _supabase.storage.from('post_images').getPublicUrl(fileName);
+    List<String> uploadedUrls = [];
+
+    for (var i = 0; i < imageFiles.length; i++) {
+      final imageFile = imageFiles[i];
+      final fileName =
+          '${userId}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+      await _supabase.storage
+          .from('post_images')
+          .upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      final url = _supabase.storage.from('post_images').getPublicUrl(fileName);
+      uploadedUrls.add(url);
+    }
+    return uploadedUrls;
   }
 
-  Future<void> createPost(String content, File? imageFile) async {
+  // kept for explicit single upload if needed internally
+  Future<String> uploadPostImage(File imageFile) async {
+    return (await uploadPostImages([imageFile])).first;
+  }
+
+  Future<void> createPost(String content, List<File> imageFiles) async {
     final userId = _supabase.auth.currentUser!.id;
-    String? imageUrl;
-    if (imageFile != null) imageUrl = await uploadPostImage(imageFile);
+
+    List<String> imageUrls = [];
+    if (imageFiles.isNotEmpty) {
+      imageUrls = await uploadPostImages(imageFiles);
+    }
+
     await _supabase.from('posts').insert({
       'content': content,
-      'image_url': imageUrl,
+      'image_urls': imageUrls, // Store as array
+      'image_url': imageUrls
+          .firstOrNull, // Backward compatibility: store first image in old column too
       'author_id': userId,
     });
   }
 
   Future<bool> deletePost(String postId) async {
-    print('Attempting to delete post: $postId'); // Debug log
+    print("Attempting to delete post: $postId");
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        print('Error: User not logged in');
+        print("Delete failed: User not logged in");
         return false;
       }
-
-      print('Current User ID: $userId');
 
       // Simplified delete: relies on RLS
       final response = await _supabase
@@ -211,11 +236,11 @@ class FeedRepository {
           .eq('id', postId)
           .select();
 
-      print('Delete result: $response');
+      print("Delete response: $response");
 
       return (response as List).isNotEmpty;
     } catch (e) {
-      print('Delete error: $e'); // Log error
+      print("Delete exception: $e");
       return false;
     }
   }

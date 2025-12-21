@@ -88,16 +88,55 @@ class PostCard extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
-          if (post.imageUrl != null)
+          if (post.imageUrls.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                // --- SMART IMAGE USED HERE ---
-                child: SmartImage(
-                  post.imageUrl!,
-                  width: double.infinity,
-                  height: 250, // Fixed height or remove for dynamic
+                child: SizedBox(
+                  height: 250,
+                  child: post.imageUrls.length == 1
+                      ? SmartImage(
+                          post.imageUrls.first,
+                          width: double.infinity,
+                          height: 250,
+                        )
+                      : PageView.builder(
+                          itemCount: post.imageUrls.length,
+                          itemBuilder: (context, index) {
+                            return Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                SmartImage(
+                                  post.imageUrls[index],
+                                  width: double.infinity,
+                                  height: 250,
+                                ),
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      "${index + 1}/${post.imageUrls.length}",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                 ),
               ),
             ),

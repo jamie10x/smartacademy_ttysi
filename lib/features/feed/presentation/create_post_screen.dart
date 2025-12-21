@@ -18,7 +18,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _contentController = TextEditingController();
   final _focusNode = FocusNode();
 
-  File? _selectedImage;
+  final List<File> _selectedImages = [];
   bool _isLoading = false;
   bool _cancelRequested = false;
 
@@ -27,19 +27,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String get _trimmedText => _contentController.text.trim();
 
   bool get _hasDraft {
-    return _trimmedText.isNotEmpty || _selectedImage != null;
+    return _trimmedText.isNotEmpty || _selectedImages.isNotEmpty;
   }
 
   bool get _canPost {
     if (_isLoading) return false;
     // Allow text-only OR image-only OR both.
-    return _trimmedText.isNotEmpty || _selectedImage != null;
+    return _trimmedText.isNotEmpty || _selectedImages.isNotEmpty;
   }
 
   @override
   void initState() {
     super.initState();
-    // Removed controller listener; we rebuild via TextField.onChanged (more direct).
   }
 
   @override
@@ -49,30 +48,26 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImages() async {
     if (_isLoading) return;
 
     final picker = ImagePicker();
     try {
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
+      final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
 
-      if (pickedFile == null) return;
+      if (pickedFiles.isEmpty) return;
 
-      final file = File(pickedFile.path);
-      if (!await file.exists()) return;
+      final newFiles = pickedFiles.map((e) => File(e.path)).toList();
 
       if (!mounted) return;
       setState(() {
-        _selectedImage = file;
+        _selectedImages.addAll(newFiles);
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not pick image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not pick images: $e')));
     }
   }
 
@@ -84,7 +79,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Discard changes?'),
-          content: const Text('Your post will be lost if you leave this screen.'),
+          content: const Text(
+            'Your post will be lost if you leave this screen.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -104,19 +101,17 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Future<bool> _handlePop() async {
     if (_isLoading) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Posting... please wait')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Posting... please wait')));
       return false;
     }
     return _confirmDiscardDraft();
   }
 
   Future<void> _maybeExit() async {
-    // Single exit path for X and system back.
     if (await _handlePop()) {
       if (!mounted) return;
-      // Prefer popping this screen; if it can't pop, fallback to home.
       final didPop = await Navigator.of(context).maybePop();
       if (!didPop && mounted) {
         context.go('/home');
@@ -137,15 +132,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     try {
       if (_cancelRequested) return;
 
-      await ref.read(feedRepositoryProvider).createPost(
-            _trimmedText,
-            _selectedImage,
-          );
+      await ref
+          .read(feedRepositoryProvider)
+          .createPost(_trimmedText, _selectedImages);
 
       if (!mounted || _cancelRequested) return;
 
       _contentController.clear();
-      setState(() => _selectedImage = null);
+      setState(() => _selectedImages.clear());
 
       ref.invalidate(postsProvider(FeedFilter.all));
       ref.invalidate(postsProvider(FeedFilter.mine));
@@ -157,9 +151,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -241,14 +235,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                 textInputAction: TextInputAction.newline,
                                 onChanged: (_) {
                                   if (!mounted) return;
-                                  setState(() {}); // keeps Post button + counter in sync (text-only works)
+                                  setState(() {});
                                 },
                                 decoration: InputDecoration(
                                   hintText: "What's happening at TTYESI?",
                                   border: InputBorder.none,
                                   counterText: '',
-                                  helperText: _selectedImage == null && _trimmedText.isEmpty
-                                      ? 'Write something or add a photo to post.'
+                                  helperText:
+                                      _selectedImages.isEmpty &&
+                                          _trimmedText.isEmpty
+                                      ? 'Write something or add photos to post.'
                                       : null,
                                   helperStyle: Theme.of(context)
                                       .textTheme
@@ -263,8 +259,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                     child: Text(
                                       '$textLen/$_maxChars'
                                       '${remaining <= 50 ? ' • $remaining left' : ''}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: remaining < 0 ? cs.error : cs.outline,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: remaining < 0
+                                                ? cs.error
+                                                : cs.outline,
                                           ),
                                     ),
                                   ),
@@ -274,7 +275,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                         _contentController.clear();
                                         setState(() {});
                                       },
-                                      icon: const Icon(Icons.backspace_outlined, size: 18),
+                                      icon: const Icon(
+                                        Icons.backspace_outlined,
+                                        size: 18,
+                                      ),
                                       label: const Text('Clear'),
                                     ),
                                 ],
@@ -285,46 +289,60 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      if (_selectedImage != null)
-                        _ImagePreview(
-                          file: _selectedImage!,
-                          onRemove: _isLoading ? null : () => setState(() => _selectedImage = null),
+                      if (_selectedImages.isNotEmpty)
+                        SizedBox(
+                          height: 120, // Height for horizontal scrolling list
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _selectedImages.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (context, index) {
+                              return _ImagePreview(
+                                file: _selectedImages[index],
+                                onRemove: _isLoading
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _selectedImages.removeAt(index);
+                                        });
+                                      },
+                              );
+                            },
+                          ),
                         ),
 
-                      if (_selectedImage != null) const SizedBox(height: 12),
+                      if (_selectedImages.isNotEmpty)
+                        const SizedBox(height: 12),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _isLoading ? null : _pickImage,
-                              icon: const Icon(Icons.image_outlined),
-                              label: Text(_selectedImage == null ? 'Add photo' : 'Change photo'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          onPressed: _isLoading
+                              ? _pickImages
+                              : _pickImages, // Allow picking more even if some selected
+                          icon: const Icon(Icons.image_outlined),
+                          label: Text(
+                            _selectedImages.isEmpty
+                                ? 'Add photos'
+                                : 'Add more photos',
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          if (_selectedImage != null)
-                            OutlinedButton(
-                              onPressed: _isLoading ? null : () => setState(() => _selectedImage = null),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                                foregroundColor: cs.error,
-                              ),
-                              child: const Text('Remove'),
-                            ),
-                        ],
+                        ),
                       ),
 
                       const SizedBox(height: 16),
-
-                      // Keep this as a secondary hint; primary helperText is near the input.
                       if (!_canPost)
                         Text(
-                          'Add text or a photo to enable posting.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline),
+                          'Add text or valid photos to enable posting.',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: cs.outline),
                           textAlign: TextAlign.center,
                         ),
                     ],
@@ -356,15 +374,20 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                 Text(
                                   _cancelRequested
                                       ? 'We\'ll stop once the current step finishes.'
-                                      : 'Uploading media and publishing your post.',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline),
+                                      : 'Uploading ${_selectedImages.length} images...',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: cs.outline),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton(
-                                    onPressed: _cancelRequested ? null : () => setState(() => _cancelRequested = true),
+                                    onPressed: _cancelRequested
+                                        ? null
+                                        : () => setState(
+                                            () => _cancelRequested = true,
+                                          ),
                                     child: const Text('Cancel'),
                                   ),
                                 ),
@@ -394,40 +417,47 @@ class _ImagePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Material(
-      color: cs.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Image.file(
+    return SizedBox(
+      width: 120, // thumbnail width
+      child: Material(
+        color: cs.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: cs.outlineVariant),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.file(
               file,
               fit: BoxFit.cover,
               errorBuilder: (context, _, __) {
                 return Container(
                   color: cs.surfaceContainerHighest,
                   alignment: Alignment.center,
-                  child: const Text('Could not load image'),
+                  child: const Icon(Icons.broken_image, size: 24),
                 );
               },
             ),
-          ),
-          Positioned(
-            right: 8,
-            top: 8,
-            child: IconButton.filledTonal(
-              onPressed: onRemove,
-              icon: const Icon(Icons.close),
+            Positioned(
+              right: 4,
+              top: 4,
+              child: InkWell(
+                onTap: onRemove,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-

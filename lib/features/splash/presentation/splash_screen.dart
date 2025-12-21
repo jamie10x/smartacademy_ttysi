@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -39,12 +40,15 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.shield,
-              size: 100,
-              // TODO: REPLACE THIS ICON WITH YOUR LOGO ASSET
-              // Example: Image.asset('assets/images/university_logo.png', width: 120),
-              color: Colors.white,
+            Hero(
+              tag: 'app_logo',
+              child: SvgPicture.asset(
+                'lib/assets/images/ttysi_logo.svg',
+                height: 120,
+                width: 120,
+                placeholderBuilder: (context) =>
+                    const CircularProgressIndicator(color: Colors.white),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
