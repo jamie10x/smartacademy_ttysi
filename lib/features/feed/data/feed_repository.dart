@@ -13,7 +13,10 @@ final feedRepositoryProvider = Provider((ref) {
 });
 
 // Update Provider to accept filter argument
-final postsProvider = FutureProvider.family<List<PostModel>, FeedFilter>((ref, filter) async {
+final postsProvider = FutureProvider.family<List<PostModel>, FeedFilter>((
+  ref,
+  filter,
+) async {
   return ref.read(feedRepositoryProvider).fetchPosts(filter: filter);
 });
 
@@ -86,7 +89,9 @@ class FeedRepository {
   final SupabaseClient _supabase;
   FeedRepository(this._supabase);
 
-  Future<List<PostModel>> fetchPosts({FeedFilter filter = FeedFilter.all}) async {
+  Future<List<PostModel>> fetchPosts({
+    FeedFilter filter = FeedFilter.all,
+  }) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
@@ -104,12 +109,15 @@ class FeedRepository {
     if (filter == FeedFilter.favorites) {
       // For Favorites, we need an INNER JOIN on post_likes to only get posts liked by current user
       // We explicitly state post_likes!inner to enforce the filter
-      query = _supabase.from('posts').select('''
+      query = _supabase
+          .from('posts')
+          .select('''
           *,
           profiles:profiles!posts_author_id_fkey(*),
           post_likes!inner(user_id), 
           post_comments(id)
-        ''').eq('post_likes.user_id', userId);
+        ''')
+          .eq('post_likes.user_id', userId);
     } else {
       // Standard query
       query = _supabase.from('posts').select(baseSelect);
@@ -131,9 +139,15 @@ class FeedRepository {
   Future<void> toggleLike(String postId, bool isCurrentlyLiked) async {
     final userId = _supabase.auth.currentUser!.id;
     if (isCurrentlyLiked) {
-      await _supabase.from('post_likes').delete().match({'post_id': postId, 'user_id': userId});
+      await _supabase.from('post_likes').delete().match({
+        'post_id': postId,
+        'user_id': userId,
+      });
     } else {
-      await _supabase.from('post_likes').insert({'post_id': postId, 'user_id': userId});
+      await _supabase.from('post_likes').insert({
+        'post_id': postId,
+        'user_id': userId,
+      });
     }
   }
 
@@ -148,13 +162,23 @@ class FeedRepository {
 
   Future<void> addComment(String postId, String text) async {
     final userId = _supabase.auth.currentUser!.id;
-    await _supabase.from('post_comments').insert({'post_id': postId, 'author_id': userId, 'content': text});
+    await _supabase.from('post_comments').insert({
+      'post_id': postId,
+      'author_id': userId,
+      'content': text,
+    });
   }
 
   Future<String> uploadPostImage(File imageFile) async {
     final userId = _supabase.auth.currentUser!.id;
     final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await _supabase.storage.from('post_images').upload(fileName, imageFile, fileOptions: const FileOptions(upsert: true));
+    await _supabase.storage
+        .from('post_images')
+        .upload(
+          fileName,
+          imageFile,
+          fileOptions: const FileOptions(upsert: true),
+        );
     return _supabase.storage.from('post_images').getPublicUrl(fileName);
   }
 
@@ -162,11 +186,37 @@ class FeedRepository {
     final userId = _supabase.auth.currentUser!.id;
     String? imageUrl;
     if (imageFile != null) imageUrl = await uploadPostImage(imageFile);
-    await _supabase.from('posts').insert({'content': content, 'image_url': imageUrl, 'author_id': userId});
+    await _supabase.from('posts').insert({
+      'content': content,
+      'image_url': imageUrl,
+      'author_id': userId,
+    });
   }
 
-  Future<void> deletePost(String postId) async {
-    final userId = _supabase.auth.currentUser!.id;
-    await _supabase.from('posts').delete().match({'id': postId, 'author_id': userId});
+  Future<bool> deletePost(String postId) async {
+    print('Attempting to delete post: $postId'); // Debug log
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        print('Error: User not logged in');
+        return false;
+      }
+
+      print('Current User ID: $userId');
+
+      // Simplified delete: relies on RLS
+      final response = await _supabase
+          .from('posts')
+          .delete()
+          .eq('id', postId)
+          .select();
+
+      print('Delete result: $response');
+
+      return (response as List).isNotEmpty;
+    } catch (e) {
+      print('Delete error: $e'); // Log error
+      return false;
+    }
   }
 }

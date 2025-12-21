@@ -44,11 +44,17 @@ class PostCard extends ConsumerWidget {
                   children: [
                     Text(
                       "${post.author.name} ${post.author.surname}",
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       timeAgo,
-                      style: GoogleFonts.inter(color: Colors.grey, fontSize: 12),
+                      style: GoogleFonts.inter(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -69,14 +75,17 @@ class PostCard extends ConsumerWidget {
                           Text("Delete", style: TextStyle(color: Colors.red)),
                         ],
                       ),
-                    )
+                    ),
                   ],
-                )
+                ),
             ],
           ),
 
           const SizedBox(height: 12),
-          Text(post.content, style: GoogleFonts.inter(fontSize: 14, height: 1.4)),
+          Text(
+            post.content,
+            style: GoogleFonts.inter(fontSize: 14, height: 1.4),
+          ),
           const SizedBox(height: 12),
 
           if (post.imageUrl != null)
@@ -98,7 +107,9 @@ class PostCard extends ConsumerWidget {
             children: [
               InkWell(
                 onTap: () async {
-                  await ref.read(feedRepositoryProvider).toggleLike(post.id, post.isLikedByMe);
+                  await ref
+                      .read(feedRepositoryProvider)
+                      .toggleLike(post.id, post.isLikedByMe);
                   ref.invalidate(postsProvider);
                 },
                 child: Row(
@@ -109,7 +120,13 @@ class PostCard extends ConsumerWidget {
                       size: 24,
                     ),
                     const SizedBox(width: 6),
-                    Text("${post.likeCount} likes", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      "${post.likeCount} likes",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -126,12 +143,18 @@ class PostCard extends ConsumerWidget {
                   children: [
                     const Icon(Icons.chat_bubble_outline, size: 22),
                     const SizedBox(width: 6),
-                    Text("${post.commentCount} comments", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      "${post.commentCount} comments",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -144,12 +167,32 @@ class PostCard extends ConsumerWidget {
         title: const Text("Delete Post?"),
         content: const Text("This action cannot be undone."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref.read(feedRepositoryProvider).deletePost(post.id);
-              ref.invalidate(postsProvider);
+              final success = await ref
+                  .read(feedRepositoryProvider)
+                  .deletePost(post.id);
+              if (success) {
+                // Invalidate ALL filter variants to ensure the list updates correctly
+                ref.invalidate(postsProvider(FeedFilter.all));
+                ref.invalidate(postsProvider(FeedFilter.mine));
+                ref.invalidate(postsProvider(FeedFilter.favorites));
+              } else {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "O'chirishda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.",
+                      ),
+                    ),
+                  );
+                }
+              }
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),

@@ -14,28 +14,48 @@ import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/follow_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/report/presentation/report_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
 import '../presentation/main_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authStream = Supabase.instance.client.auth.onAuthStateChange;
 
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authStream),
     redirect: (context, state) {
       final session = Supabase.instance.client.auth.currentSession;
-      final isLoggingIn = state.uri.toString() == '/login' || state.uri.toString() == '/signup';
+      final isLoggingIn =
+          state.uri.toString() == '/login' || state.uri.toString() == '/signup';
+      final isSplash = state.uri.toString() == '/splash';
+
+      // Always allow Splash
+      if (isSplash) return null;
 
       if (session == null && !isLoggingIn) return '/login';
       if (session != null && isLoggingIn) return '/home';
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (context, state) => const SignInScreen()),
-      GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
-      GoRoute(path: '/report', builder: (context, state) => const ReportScreen()),
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/report',
+        builder: (context, state) => const ReportScreen(),
+      ),
       GoRoute(
         path: '/chat-list',
         builder: (context, state) => const ChatListScreen(),
@@ -67,6 +87,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainScaffold(navigationShell: navigationShell);
@@ -74,30 +99,42 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/home', builder: (context, state) => const FeedScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/create', builder: (context, state) => const CreatePostScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
               GoRoute(
-                  path: '/activity',
-                  builder: (context, state) => const ActivityScreen()
+                path: '/home',
+                builder: (context, state) => const FeedScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+              GoRoute(
+                path: '/search',
+                builder: (context, state) => const SearchScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/create',
+                builder: (context, state) => const CreatePostScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/activity',
+                builder: (context, state) => const ActivityScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
             ],
           ),
         ],
