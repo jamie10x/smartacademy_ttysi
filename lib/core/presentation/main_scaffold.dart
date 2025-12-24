@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../theme/app_theme.dart';
-
 class MainScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainScaffold({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainScaffold({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -23,33 +18,33 @@ class MainScaffold extends StatelessWidget {
             initialLocation: index == navigationShell.currentIndex,
           );
         },
-        indicatorColor: Colors.transparent,
-        backgroundColor: Colors.white,
+        // indicatorColor: Colors.transparent, // Let theme handle it
+        // backgroundColor: Colors.white,      // Let theme handle it
         elevation: 5,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: AppTheme.primaryColor),
+            selectedIcon: Icon(Icons.home),
             label: '',
           ),
           NavigationDestination(
             icon: Icon(Icons.search),
-            selectedIcon: Icon(Icons.search, color: AppTheme.primaryColor),
+            selectedIcon: Icon(Icons.search),
             label: '',
           ),
           NavigationDestination(
             icon: Icon(Icons.add_box_outlined),
-            selectedIcon: Icon(Icons.add_box, color: AppTheme.primaryColor),
+            selectedIcon: Icon(Icons.add_box),
             label: '',
           ),
           NavigationDestination(
             icon: Icon(Icons.favorite_outline),
-            selectedIcon: Icon(Icons.favorite, color: AppTheme.primaryColor),
+            selectedIcon: Icon(Icons.favorite),
             label: '',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppTheme.primaryColor),
+            selectedIcon: Icon(Icons.person),
             label: '',
           ),
         ],

@@ -107,6 +107,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return TextField(
       controller: controller,
       obscureText: isPassword,
+      style: const TextStyle(
+        color: Colors.black,
+      ), // Ensure text is visible on white background
       decoration: InputDecoration(
         hintText: hint,
         filled: true,

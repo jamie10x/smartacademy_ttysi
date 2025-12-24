@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/supabase_constants.dart';
 import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 
 final class LoggerObserver extends ProviderObserver {
   @override
@@ -29,12 +30,7 @@ void main() async {
     anonKey: SupabaseConstants.anonKey,
   );
 
-  runApp(
-    ProviderScope(
-      observers: [LoggerObserver()],
-      child: const MyApp(),
-    ),
-  );
+  runApp(ProviderScope(observers: [LoggerObserver()], child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -43,11 +39,14 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
       title: 'TTYESI Social',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
     );
   }

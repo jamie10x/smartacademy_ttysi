@@ -47,7 +47,12 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
       label: 'Postlar',
       icon: Icons.article_outlined,
       // Heuristic: treat explicit "post" type OR anything that has postImageUrl but isn't like/comment/follow.
-      predicate: (a) => a.type == 'post' || (a.postImageUrl != null && a.type != 'like' && a.type != 'comment' && a.type != 'follow'),
+      predicate: (a) =>
+          a.type == 'post' ||
+          (a.postImageUrl != null &&
+              a.type != 'like' &&
+              a.type != 'comment' &&
+              a.type != 'follow'),
       typeKeys: const {'post'},
     ),
   ];
@@ -57,11 +62,11 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
     final activityAsync = ref.watch(activitiesProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white, // REMOVED: Let theme handle it
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white, // REMOVED
         elevation: 0,
-        surfaceTintColor: Colors.white,
+        // surfaceTintColor: Colors.white, // REMOVED
         centerTitle: true, // <-- center AppBar title
         title: activityAsync.maybeWhen(
           data: (activities) {
@@ -74,7 +79,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 if (total > 0) ...[
@@ -89,7 +94,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
         ),
@@ -104,7 +109,9 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
             final clamped = _selectedTab.clamp(0, _tabs.length - 1);
             if (clamped != _selectedTab) _selectedTab = clamped;
 
-            final filtered = activities.where(_tabs[_selectedTab].predicate).toList();
+            final filtered = activities
+                .where(_tabs[_selectedTab].predicate)
+                .toList();
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -126,14 +133,24 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                           final count = counts[i] ?? 0;
 
                           return Padding(
-                            padding: EdgeInsets.only(right: i == _tabs.length - 1 ? 0 : 10),
+                            padding: EdgeInsets.only(
+                              right: i == _tabs.length - 1 ? 0 : 10,
+                            ),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(999),
                               onTap: () => setState(() => _selectedTab = i),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: selected ? const Color(0xFF2962FF) : const Color(0xFFF2F4F7),
+                                  color: selected
+                                      ? const Color(0xFF2962FF)
+                                      : Theme.of(context).brightness ==
+                                            Brightness.dark
+                                      ? Colors.grey[800]
+                                      : const Color(0xFFF2F4F7),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Row(
@@ -142,7 +159,9 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                                     Icon(
                                       tab.icon,
                                       size: 18,
-                                      color: selected ? Colors.white : Colors.black87,
+                                      color: selected
+                                          ? Colors.white
+                                          : Theme.of(context).iconTheme.color,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
@@ -150,7 +169,11 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: selected ? Colors.white : Colors.black87,
+                                        color: selected
+                                            ? Colors.white
+                                            : Theme.of(
+                                                context,
+                                              ).textTheme.bodyMedium?.color,
                                       ),
                                     ),
                                     if (count > 0) ...[
@@ -178,14 +201,22 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                               return SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 child: ConstrainedBox(
-                                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                  constraints: BoxConstraints(
+                                    minHeight: constraints.maxHeight,
+                                  ),
                                   child: Center(
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.notifications_off_outlined, size: 56, color: Colors.grey[400]),
+                                          Icon(
+                                            Icons.notifications_off_outlined,
+                                            size: 56,
+                                            color: Colors.grey[400],
+                                          ),
                                           const SizedBox(height: 12),
                                           Text(
                                             "Hozircha yangilik yo'q",
@@ -217,7 +248,8 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemCount: filtered.length,
-                            separatorBuilder: (ctx, i) => const SizedBox(height: 20),
+                            separatorBuilder: (ctx, i) =>
+                                const SizedBox(height: 20),
                             itemBuilder: (context, index) {
                               final item = filtered[index];
                               return Row(
@@ -225,7 +257,10 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                                 children: [
                                   // Unread indicator (still mock)
                                   Container(
-                                    margin: const EdgeInsets.only(top: 15, right: 8),
+                                    margin: const EdgeInsets.only(
+                                      top: 15,
+                                      right: 8,
+                                    ),
                                     width: 6,
                                     height: 6,
                                     decoration: const BoxDecoration(
@@ -244,19 +279,32 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         RichText(
                                           text: TextSpan(
-                                            style: GoogleFonts.inter(color: Colors.black, fontSize: 14),
+                                            style: GoogleFonts.inter(
+                                              color: Theme.of(
+                                                context,
+                                              ).textTheme.bodyLarge?.color,
+                                              fontSize: 14,
+                                            ),
                                             children: [
                                               TextSpan(
-                                                text: "${item.actor.name} ${item.actor.surname} ",
-                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                text:
+                                                    "${item.actor.name} ${item.actor.surname} ",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                               TextSpan(
-                                                text: _getTimeAgo(item.createdAt),
-                                                style: const TextStyle(color: Colors.grey),
+                                                text: _getTimeAgo(
+                                                  item.createdAt,
+                                                ),
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -264,7 +312,9 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           _getActionText(item.type),
-                                          style: GoogleFonts.inter(color: Colors.grey[700]),
+                                          style: GoogleFonts.inter(
+                                            color: Colors.grey[700],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -274,14 +324,28 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                                     ElevatedButton(
                                       onPressed: () {},
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF2962FF),
+                                        backgroundColor: const Color(
+                                          0xFF2962FF,
+                                        ),
                                         foregroundColor: Colors.white,
                                         minimumSize: const Size(88, 32),
-                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
                                         elevation: 0,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
                                       ),
-                                      child: const Text("Kuzatish", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                                      child: const Text(
+                                        "Kuzatish",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
                                     )
                                   else if (item.postImageUrl != null)
                                     ClipRRect(
@@ -367,19 +431,18 @@ class _CountBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         // When used in AppBar we want a subtle pill; keep readable.
-        color: selected ? const Color(0xFFEEF2FF) : Colors.white,
+        color: selected ? const Color(0xFFEEF2FF) : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Text(
         text,
         style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w800,
-          color: Colors.black87,
+          color: Theme.of(context).textTheme.bodySmall?.color,
         ),
       ),
     );
   }
 }
-

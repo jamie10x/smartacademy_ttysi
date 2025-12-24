@@ -22,7 +22,7 @@ class PostCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +155,9 @@ class PostCard extends ConsumerWidget {
                   children: [
                     Icon(
                       post.isLikedByMe ? Icons.favorite : Icons.favorite_border,
-                      color: post.isLikedByMe ? Colors.red : Colors.black87,
+                      color: post.isLikedByMe
+                          ? Colors.red
+                          : Theme.of(context).iconTheme.color,
                       size: 24,
                     ),
                     const SizedBox(width: 6),

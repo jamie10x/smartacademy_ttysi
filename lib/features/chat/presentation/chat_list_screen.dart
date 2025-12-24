@@ -7,9 +7,14 @@ import '../../../core/presentation/widgets/smart_avatar.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/chat_repository.dart';
 
-final myChatsProvider = FutureProvider((ref) => ref.read(chatRepositoryProvider).getMyChats());
+final myChatsProvider = FutureProvider(
+  (ref) => ref.read(chatRepositoryProvider).getMyChats(),
+);
 
-final chatPartnerProvider = FutureProvider.family<UserProfile, String>((ref, userId) {
+final chatPartnerProvider = FutureProvider.family<UserProfile, String>((
+  ref,
+  userId,
+) {
   return ref.read(profileRepositoryProvider).getProfile(userId);
 });
 
@@ -21,50 +26,38 @@ class ChatListScreen extends ConsumerWidget {
     final chatsAsync = ref.watch(myChatsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Light background
+      // backgroundColor: const Color(0xFFF9F9F9), // REMOVED: Let theme handle it
       appBar: AppBar(
-        title: const Text("Kontaktlar", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(
+          "Kontaktlar",
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.black),
+        // iconTheme: const IconThemeData(color: Colors.black), // REMOVED
       ),
       body: Column(
         children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search, color: Colors.black),
-                  suffixIcon: const Icon(Icons.edit, color: Colors.black, size: 20),
-                  border: InputBorder.none,
-                  hintText: "",
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ),
-
           // White Card Container for List
           Expanded(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               child: chatsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text("Error: $e")),
                 data: (chats) {
-                  if (chats.isEmpty) return const Center(child: Text("Hozircha xabarlar yo'q"));
+                  if (chats.isEmpty) {
+                    return const Center(child: Text("Hozircha xabarlar yo'q"));
+                  }
 
                   return ListView.separated(
                     padding: const EdgeInsets.all(16),
@@ -74,13 +67,18 @@ class ChatListScreen extends ConsumerWidget {
                       final chat = chats[index];
                       return Consumer(
                         builder: (context, ref, _) {
-                          final partnerAsync = ref.watch(chatPartnerProvider(chat.otherUserId));
+                          final partnerAsync = ref.watch(
+                            chatPartnerProvider(chat.otherUserId),
+                          );
                           return partnerAsync.when(
                             loading: () => const SizedBox(),
-                            error: (_,__) => const SizedBox(),
+                            error: (_, __) => const SizedBox(),
                             data: (user) {
                               return InkWell(
-                                onTap: () => context.push('/chat/${chat.id}', extra: "${user.name} ${user.surname}"),
+                                onTap: () => context.push(
+                                  '/chat/${chat.id}',
+                                  extra: "${user.name} ${user.surname}",
+                                ),
                                 child: Row(
                                   children: [
                                     SmartAvatar(
@@ -92,20 +90,23 @@ class ChatListScreen extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             user.name, // Just first name as per design usually, or full
-                                            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16),
+                                            style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Theme.of(
+                                                context,
+                                              ).textTheme.bodyLarge?.color,
+                                            ),
                                           ),
                                           const SizedBox(height: 2),
-                                          Text(
-                                            "email@gmail.com", // Mock email or bio for now
-                                            style: GoogleFonts.inter(color: Colors.grey, fontSize: 12),
-                                          ),
                                         ],
                                       ),
-                                    )
+                                    ),
                                   ],
                                 ),
                               );

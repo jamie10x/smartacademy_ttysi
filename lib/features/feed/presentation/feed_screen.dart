@@ -18,15 +18,18 @@ class FeedScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(
             "Yangiliklar",
-            style: GoogleFonts.inter(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          backgroundColor: Colors.white,
+          // backgroundColor: Colors.white, // REMOVED
           elevation: 0,
-          bottom: const TabBar(
-            labelColor: AppTheme.primaryColor,
+          bottom: TabBar(
+            labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Colors.grey,
-            indicatorColor: AppTheme.primaryColor,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
             tabs: [
               Tab(text: "Barchasi"),
               Tab(text: "Siz joylaganlar"),
@@ -38,7 +41,10 @@ class FeedScreen extends ConsumerWidget {
               onPressed: () {
                 context.push('/chat-list');
               },
-              icon: const Icon(Icons.message_outlined, color: Colors.black87),
+              icon: Icon(
+                Icons.message_outlined,
+                color: Theme.of(context).iconTheme.color,
+              ),
             ),
           ],
         ),
